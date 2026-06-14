@@ -1,0 +1,36 @@
+name: Daily Job Digest
+
+# Runs on GitHub's servers — your laptop does NOT need to be on.
+on:
+  schedule:
+    # 13:30 UTC = 19:00 IST (7 PM India) every day.
+    # GitHub may delay scheduled runs by a few minutes under load.
+    - cron: "30 13 * * *"
+  workflow_dispatch:   # lets you trigger a run manually from the Actions tab
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: python -m pytest tests/ -q
+
+      - name: Send job digest email
+        env:
+          GMAIL_APP_PASS: ${{ secrets.GMAIL_APP_PASS }}
+          SENDER_EMAIL:   ${{ secrets.SENDER_EMAIL }}
+          RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+        run: python job_scraper.py
