@@ -54,11 +54,15 @@ def load_config(env=None):
     sending cleanly instead of crashing).
     """
     env = os.environ if env is None else env
-    sender = env.get("SENDER_EMAIL", DEFAULT_SENDER)
+    # Use `or` (not get-default) so an *empty* value — which is what GitHub
+    # Actions passes for an unset secret — falls back to the default instead
+    # of overriding it with "" (which would make SMTP login with an empty
+    # username and fail with 535 BadCredentials).
+    sender = (env.get("SENDER_EMAIL") or DEFAULT_SENDER).strip()
     return {
         "sender":   sender,
-        "receiver": env.get("RECEIVER_EMAIL", sender),
-        "app_pass": env.get("GMAIL_APP_PASS", ""),
+        "receiver": (env.get("RECEIVER_EMAIL") or sender).strip(),
+        "app_pass": (env.get("GMAIL_APP_PASS") or "").strip(),
     }
 
 

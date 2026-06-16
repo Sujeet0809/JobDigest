@@ -49,6 +49,20 @@ def test_load_config_missing_password_is_empty_not_placeholder():
     assert "YOUR_GMAIL_APP_PASSWORD" not in cfg.values()
 
 
+def test_load_config_empty_env_falls_back_to_defaults():
+    # GitHub Actions renders an *unset* secret as an empty string, so
+    # SENDER_EMAIL="" must still fall back to DEFAULT_SENDER — otherwise the
+    # SMTP login uses an empty username and Gmail returns 535 BadCredentials.
+    cfg = js.load_config({
+        "SENDER_EMAIL": "",
+        "RECEIVER_EMAIL": "",
+        "GMAIL_APP_PASS": "  pw  ",
+    })
+    assert cfg["sender"] == js.DEFAULT_SENDER
+    assert cfg["receiver"] == js.DEFAULT_SENDER
+    assert cfg["app_pass"] == "pw"          # surrounding whitespace stripped
+
+
 def test_no_hardcoded_password_in_source():
     src = open(js.__file__, encoding="utf-8").read()
     assert "YOUR_GMAIL_APP_PASSWORD" not in src
