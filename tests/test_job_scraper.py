@@ -63,6 +63,19 @@ def test_load_config_empty_env_falls_back_to_defaults():
     assert cfg["app_pass"] == "pw"          # surrounding whitespace stripped
 
 
+def test_workflows_use_node24_actions():
+    # Guard against the deprecated Node-20 action versions.
+    import glob
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    files = glob.glob(os.path.join(root, ".github", "workflows", "*.yml"))
+    assert files, "no workflow files found"
+    text = "\n".join(open(f, encoding="utf-8").read() for f in files)
+    assert "actions/checkout@v4" not in text
+    assert "actions/setup-python@v5" not in text
+    assert "actions/checkout@v6" in text
+    assert "actions/setup-python@v6" in text
+
+
 def test_no_hardcoded_password_in_source():
     src = open(js.__file__, encoding="utf-8").read()
     assert "YOUR_GMAIL_APP_PASSWORD" not in src
